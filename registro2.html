@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento de Entrenamiento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #4a5568;
+            transition: border-color 0.2s;
+        }
+        input[type="date"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .exercise-card {
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .exercise-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+        .set-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        .set-group input,
+        .set-group select {
+            flex: 1;
+            min-width: 80px;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #cbd5e0;
+        }
+        .set-group button {
+            background-color: #ef4444;
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .set-group button:hover {
+            background-color: #dc2626;
+        }
+        .add-set-btn {
+            background-color: #4f46e5;
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 0.5rem;
+        }
+        .add-set-btn:hover {
+            background-color: #4338ca;
+        }
+        .submit-btn {
+            background-color: #22c55e;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 100%;
+            margin-top: 1.5rem;
+        }
+        .submit-btn:hover {
+            background-color: #16a34a;
+        }
+        #jsonOutput {
+            background-color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 1.5rem;
+            border: 1px solid #cbd5e0;
+            min-height: 100px;
+        }
+        .copy-btn {
+            background-color: #0ea5e9;
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 0.5rem;
+        }
+        .copy-btn:hover {
+            background-color: #0284c7;
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .message-box.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">Registro de Entrenamiento</h1>
+
+        <div class="form-group">
+            <label for="workoutDate">Fecha:</label>
+            <input type="date" id="workoutDate" class="rounded-lg">
+        </div>
+
+        <div class="form-group">
+            <label for="workoutType">Tipo de Workout:</label>
+            <select id="workoutType" class="rounded-lg">
+                <option value="">Selecciona un tipo de workout</option>
+                <option value="1">Workout 1</option>
+                <option value="2">Workout 2</option>
+                <option value="3">Workout 3</option>
+            </select>
+        </div>
+
+        <div id="exercisesContainer" class="mt-6">
+            <!-- Los ejercicios se cargarán aquí dinámicamente -->
+        </div>
+
+        <button id="generateJsonBtn" class="submit-btn rounded-lg">Generar JSON</button>
+
+        <div class="mt-6">
+            <label for="jsonOutput">Resultado JSON:</label>
+            <textarea id="jsonOutput" rows="10" readonly class="w-full rounded-lg"></textarea>
+            <button id="copyJsonBtn" class="copy-btn rounded-lg">Copiar JSON</button>
+        </div>
+    </div>
+
+    <div id="messageBox" class="message-box"></div>
+
+    <script>
+        // Definición de los ejercicios para cada tipo de workout
+        const workouts = {
+            '1': [
+                "Bench Press Machine",
+                "Seated Dumbbell Shoulder Press",
+                "Inclined Dumbbell Press",
+                "Cable Tricep Pushdowns with rope",
+                "Lateral Raises"
+            ],
+            '2': [
+                "Barbell RDLs",
+                "Seated Cable Rows",
+                "Lat Pulldowns",
+                "Incline Dumbbell Curls",
+                "Face Pulls (with cables)",
+                "Hammer Curls"
+            ],
+            '3': [
+                "Leg Press Machine",
+                "Bulgarian Split Squats",
+                "Leg Curls",
+                "Leg Extensions",
+                "Horizonal Calf Press"
+            ]
+        };
+
+        const workoutTypeSelect = document.getElementById('workoutType');
+        const exercisesContainer = document.getElementById('exercisesContainer');
+        const generateJsonBtn = document.getElementById('generateJsonBtn');
+        const jsonOutput = document.getElementById('jsonOutput');
+        const copyJsonBtn = document.getElementById('copyJsonBtn');
+        const messageBox = document.getElementById('messageBox');
+
+        // Función para mostrar mensajes temporales
+        function showMessage(message, type = 'success') {
+            messageBox.textContent = message;
+            messageBox.className = `message-box show bg-${type === 'success' ? 'green' : 'red'}-500`;
+            setTimeout(() => {
+                messageBox.className = 'message-box';
+            }, 3000);
+        }
+
+        // Función para agregar un nuevo set a un ejercicio
+        function addSet(exerciseIndex) {
+            const setsContainer = document.getElementById(`sets-container-${exerciseIndex}`);
+            const setIndex = setsContainer.children.length; // Obtener el número actual de sets
+
+            const setDiv = document.createElement('div');
+            setDiv.className = 'set-group';
+            setDiv.innerHTML = `
+                <span class="font-semibold">Set ${setIndex + 1}:</span>
+                <input type="number" placeholder="Peso" class="set-weight rounded-lg" min="0">
+                <select class="set-unit rounded-lg">
+                    <option value="Kg">Kg</option>
+                    <option value="Lbs">Lbs</option>
+                </select>
+                <select class="set-type rounded-lg">
+                    <option value="total">Total</option>
+                    <option value="per hand">Por mano</option>
+                </select>
+                <input type="number" placeholder="Reps" class="set-reps rounded-lg" min="0">
+                <input type="number" placeholder="RIR" class="set-rir rounded-lg" min="0" max="10">
+                <button type="button" class="remove-set-btn rounded-lg">Eliminar Set</button>
+            `;
+            setsContainer.appendChild(setDiv);
+
+            // Añadir evento para eliminar el set
+            setDiv.querySelector('.remove-set-btn').addEventListener('click', () => {
+                setDiv.remove();
+                // Re-enumerar los sets después de eliminar uno
+                Array.from(setsContainer.children).forEach((child, idx) => {
+                    child.querySelector('span').textContent = `Set ${idx + 1}:`;
+                });
+            });
+        }
+
+        // Event listener para el cambio de tipo de workout
+        workoutTypeSelect.addEventListener('change', (event) => {
+            const selectedWorkoutType = event.target.value;
+            exercisesContainer.innerHTML = ''; // Limpiar ejercicios anteriores
+
+            if (selectedWorkoutType && workouts[selectedWorkoutType]) {
+                workouts[selectedWorkoutType].forEach((exerciseName, index) => {
+                    const exerciseCard = document.createElement('div');
+                    exerciseCard.className = 'exercise-card rounded-lg';
+                    exerciseCard.innerHTML = `
+                        <h3 class="text-indigo-600">${exerciseName}</h3>
+                        <div id="sets-container-${index}">
+                            <!-- Los sets se añadirán aquí -->
+                        </div>
+                        <button type="button" class="add-set-btn rounded-lg" data-exercise-index="${index}">Añadir Set</button>
+                    `;
+                    exercisesContainer.appendChild(exerciseCard);
+
+                    // Añadir un set inicial por defecto para cada ejercicio
+                    addSet(index);
+
+                    // Añadir evento para el botón "Añadir Set"
+                    exerciseCard.querySelector('.add-set-btn').addEventListener('click', (e) => {
+                        addSet(parseInt(e.target.dataset.exerciseIndex));
+                    });
+                });
+            }
+        });
+
+        // Event listener para generar el JSON
+        generateJsonBtn.addEventListener('click', () => {
+            const workoutDate = document.getElementById('workoutDate').value;
+            const workoutType = document.getElementById('workoutType').value;
+
+            if (!workoutDate || !workoutType) {
+                showMessage('Por favor, selecciona la fecha y el tipo de workout.', 'error');
+                return;
+            }
+
+            const workoutData = {
+                Date: workoutDate,
+                WorkoutType: `Workout ${workoutType}`,
+                Exercises: []
+            };
+
+            const exerciseCards = exercisesContainer.querySelectorAll('.exercise-card');
+            exerciseCards.forEach(card => {
+                const exerciseName = card.querySelector('h3').textContent;
+                const sets = [];
+                const setGroups = card.querySelectorAll('.set-group');
+
+                setGroups.forEach(setGroup => {
+                    const weight = setGroup.querySelector('.set-weight').value;
+                    const unit = setGroup.querySelector('.set-unit').value;
+                    const type = setGroup.querySelector('.set-type').value;
+                    const reps = setGroup.querySelector('.set-reps').value;
+                    const rir = setGroup.querySelector('.set-rir').value;
+
+                    if (weight && reps && rir) {
+                        sets.push({
+                            Weight: parseFloat(weight),
+                            Unit: unit,
+                            Type: type,
+                            Reps: parseInt(reps),
+                            RIR: parseInt(rir)
+                        });
+                    }
+                });
+
+                if (sets.length > 0) {
+                    workoutData.Exercises.push({
+                        ExerciseName: exerciseName,
+                        Sets: sets
+                    });
+                }
+            });
+
+            jsonOutput.value = JSON.stringify(workoutData, null, 2);
+            showMessage('JSON generado exitosamente.');
+        });
+
+        // Event listener para copiar el JSON al portapapeles
+        copyJsonBtn.addEventListener('click', () => {
+            if (jsonOutput.value) {
+                // Usar document.execCommand para compatibilidad con iframes
+                jsonOutput.select();
+                document.execCommand('copy');
+                showMessage('JSON copiado al portapapeles.');
+            } else {
+                showMessage('No hay JSON para copiar.', 'error');
+            }
+        });
+
+        // Establecer la fecha actual por defecto
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('workoutDate').value = `${year}-${month}-${day}`;
+        });
+    </script>
+</body>
+</html>
