@@ -1,373 +1,182 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seguimiento de Entrenamiento</title>
+    <title>Strength Logger</title>
+    
+    <!-- 1. Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 2. Vue.js for interactivity -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Basic styling for dark mode and to prevent "flash of unstyled content" -->
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8;
-            color: #333;
-        }
-        .container {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 1.5rem;
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #4a5568;
-        }
-        input[type="date"],
-        select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #cbd5e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            color: #4a5568;
-            transition: border-color 0.2s;
-        }
-        input[type="date"]:focus,
-        select:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
-        .exercise-card {
-            background-color: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        .exercise-card h3 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 1rem;
-        }
-        .set-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            align-items: center;
-        }
-        .set-group input,
-        .set-group select {
-            flex: 1;
-            min-width: 80px;
-            padding: 0.5rem;
-            border-radius: 6px;
-            border: 1px solid #cbd5e0;
-        }
-        .set-group button {
-            background-color: #ef4444;
-            color: white;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .set-group button:hover {
-            background-color: #dc2626;
-        }
-        .add-set-btn {
-            background-color: #4f46e5;
-            color: white;
-            padding: 0.6rem 1rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            margin-top: 0.5rem;
-        }
-        .add-set-btn:hover {
-            background-color: #4338ca;
-        }
-        .submit-btn {
-            background-color: #22c55e;
-            color: white;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            width: 100%;
-            margin-top: 1.5rem;
-        }
-        .submit-btn:hover {
-            background-color: #16a34a;
-        }
-        #jsonOutput {
-            background-color: #e2e8f0;
-            padding: 1rem;
-            border-radius: 8px;
-            font-family: monospace;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            margin-top: 1.5rem;
-            border: 1px solid #cbd5e0;
-            min-height: 100px;
-        }
-        .copy-btn {
-            background-color: #0ea5e9;
-            color: white;
-            padding: 0.6rem 1rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            margin-top: 0.5rem;
-        }
-        .copy-btn:hover {
-            background-color: #0284c7;
-        }
-        .message-box {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #4CAF50;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-        }
-        .message-box.show {
-            opacity: 1;
-        }
+        body { background-color: #111827; color: #d1d5db; }
+        [v-cloak] { display: none; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">Registro de Entrenamiento</h1>
+<body class="p-4 md:p-6 lg:p-8">
 
-        <div class="form-group">
-            <label for="workoutDate">Fecha:</label>
-            <input type="date" id="workoutDate" class="rounded-lg">
+    <!-- This is the main container for our Vue app -->
+    <div id="app" v-cloak>
+
+        <h1 class="text-3xl font-bold text-white text-center mb-4">Strength Logger</h1>
+
+        <!-- WORKOUT SELECTION -->
+        <div class="mb-6 bg-gray-800 p-4 rounded-lg">
+            <h2 class="font-bold text-lg mb-2 text-white">Select Workout</h2>
+            <div class="grid grid-cols-3 gap-2">
+                <button @click="selectWorkout('Push')" :class="{'bg-indigo-600 text-white': currentWorkout.workoutType === 'Push', 'bg-gray-700 hover:bg-gray-600': currentWorkout.workoutType !== 'Push'}" class="p-2 rounded-md font-semibold transition-colors">Push</button>
+                <button @click="selectWorkout('Pull')" :class="{'bg-indigo-600 text-white': currentWorkout.workoutType === 'Pull', 'bg-gray-700 hover:bg-gray-600': currentWorkout.workoutType !== 'Pull'}" class="p-2 rounded-md font-semibold transition-colors">Pull</button>
+                <button @click="selectWorkout('Legs')" :class="{'bg-indigo-600 text-white': currentWorkout.workoutType === 'Legs', 'bg-gray-700 hover:bg-gray-600': currentWorkout.workoutType !== 'Legs'}" class="p-2 rounded-md font-semibold transition-colors">Legs</button>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="workoutType">Tipo de Workout:</label>
-            <select id="workoutType" class="rounded-lg">
-                <option value="">Selecciona un tipo de workout</option>
-                <option value="1">Workout 1</option>
-                <option value="2">Workout 2</option>
-                <option value="3">Workout 3</option>
-            </select>
-        </div>
+        <!-- WORKOUT DETAILS (only shows if a workout is selected) -->
+        <div v-if="currentWorkout.workoutType" class="space-y-4">
+            <div class="flex justify-between items-center bg-gray-800 p-4 rounded-lg">
+                <input type="date" v-model="currentWorkout.date" class="bg-gray-700 p-2 rounded-md w-1/2">
+                <button @click="exportToJson" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-md">Export JSON</button>
+            </div>
 
-        <div id="exercisesContainer" class="mt-6">
-            <!-- Los ejercicios se cargarán aquí dinámicamente -->
-        </div>
+            <!-- EXERCISE CARDS -->
+            <div v-for="exercise in currentWorkout.exercises" :key="exercise.name" class="bg-gray-800 rounded-lg shadow-md">
+                <!-- Collapsible Header -->
+                <div @click="exercise.isOpen = !exercise.isOpen" class="p-4 flex justify-between items-center cursor-pointer border-b border-gray-700">
+                    <h3 class="text-xl font-bold text-white">{{ exercise.name }}</h3>
+                    <span class="text-2xl transition-transform" :class="{'rotate-180': !exercise.isOpen}">&#9660;</span>
+                </div>
+                
+                <!-- Collapsible Content -->
+                <div v-show="exercise.isOpen" class="p-4">
+                    <!-- Set Headers -->
+                    <div class="grid grid-cols-12 gap-2 text-xs text-gray-400 mb-2 font-bold">
+                        <div class="col-span-3">Weight</div>
+                        <div class="col-span-4">Unit/Type</div>
+                        <div class="col-span-2">Reps</div>
+                        <div class="col-span-2">RIR</div>
+                    </div>
+                    
+                    <!-- Set Rows -->
+                    <div v-for="(set, index) in exercise.sets" :key="index" class="grid grid-cols-12 gap-2 items-center mb-2">
+                        <input type="number" v-model.number="set.weight" class="col-span-3 bg-gray-700 p-2 rounded-md">
+                        <div class="col-span-4 flex gap-1">
+                            <select v-model="set.unit" class="bg-gray-700 p-2 rounded-md w-full text-xs">
+                                <option>Kg</option>
+                                <option>Lbs</option>
+                            </select>
+                            <select v-model="set.type" class="bg-gray-700 p-2 rounded-md w-full text-xs">
+                                <option>total</option>
+                                <option>per hand</option>
+                            </select>
+                        </div>
+                        <input type="number" v-model.number="set.reps" class="col-span-2 bg-gray-700 p-2 rounded-md">
+                        <input type="number" v-model.number="set.rir" class="col-span-2 bg-gray-700 p-2 rounded-md">
+                    </div>
 
-        <button id="generateJsonBtn" class="submit-btn rounded-lg">Generar JSON</button>
-
-        <div class="mt-6">
-            <label for="jsonOutput">Resultado JSON:</label>
-            <textarea id="jsonOutput" rows="10" readonly class="w-full rounded-lg"></textarea>
-            <button id="copyJsonBtn" class="copy-btn rounded-lg">Copiar JSON</button>
+                    <!-- Add Set Button -->
+                    <button @click="addSet(exercise)" class="mt-2 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-bold py-2 px-3 rounded-md w-full">Add Set</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="messageBox" class="message-box"></div>
-
+    <!-- 3. All of our Vue.js Application Logic -->
     <script>
-        // Definición de los ejercicios para cada tipo de workout
-        const workouts = {
-            '1': [
-                "Bench Press Machine",
-                "Seated Dumbbell Shoulder Press",
-                "Inclined Dumbbell Press",
-                "Cable Tricep Pushdowns with rope",
-                "Lateral Raises"
-            ],
-            '2': [
-                "Barbell RDLs",
-                "Seated Cable Rows",
-                "Lat Pulldowns",
-                "Incline Dumbbell Curls",
-                "Face Pulls (with cables)",
-                "Hammer Curls"
-            ],
-            '3': [
-                "Leg Press Machine",
-                "Bulgarian Split Squats",
-                "Leg Curls",
-                "Leg Extensions",
-                "Horizonal Calf Press"
-            ]
-        };
+        const { createApp, ref, watch, onMounted } = Vue;
 
-        const workoutTypeSelect = document.getElementById('workoutType');
-        const exercisesContainer = document.getElementById('exercisesContainer');
-        const generateJsonBtn = document.getElementById('generateJsonBtn');
-        const jsonOutput = document.getElementById('jsonOutput');
-        const copyJsonBtn = document.getElementById('copyJsonBtn');
-        const messageBox = document.getElementById('messageBox');
+        createApp({
+            setup() {
+                // --- DATA ---
 
-        // Función para mostrar mensajes temporales
-        function showMessage(message, type = 'success') {
-            messageBox.textContent = message;
-            messageBox.className = `message-box show bg-${type === 'success' ? 'green' : 'red'}-500`;
-            setTimeout(() => {
-                messageBox.className = 'message-box';
-            }, 3000);
-        }
-
-        // Función para agregar un nuevo set a un ejercicio
-        function addSet(exerciseIndex) {
-            const setsContainer = document.getElementById(`sets-container-${exerciseIndex}`);
-            const setIndex = setsContainer.children.length; // Obtener el número actual de sets
-
-            const setDiv = document.createElement('div');
-            setDiv.className = 'set-group';
-            setDiv.innerHTML = `
-                <span class="font-semibold">Set ${setIndex + 1}:</span>
-                <input type="number" placeholder="Peso" class="set-weight rounded-lg" min="0">
-                <select class="set-unit rounded-lg">
-                    <option value="Kg">Kg</option>
-                    <option value="Lbs">Lbs</option>
-                </select>
-                <select class="set-type rounded-lg">
-                    <option value="total">Total</option>
-                    <option value="per hand">Por mano</option>
-                </select>
-                <input type="number" placeholder="Reps" class="set-reps rounded-lg" min="0">
-                <input type="number" placeholder="RIR" class="set-rir rounded-lg" min="0" max="10">
-                <button type="button" class="remove-set-btn rounded-lg">Eliminar Set</button>
-            `;
-            setsContainer.appendChild(setDiv);
-
-            // Añadir evento para eliminar el set
-            setDiv.querySelector('.remove-set-btn').addEventListener('click', () => {
-                setDiv.remove();
-                // Re-enumerar los sets después de eliminar uno
-                Array.from(setsContainer.children).forEach((child, idx) => {
-                    child.querySelector('span').textContent = `Set ${idx + 1}:`;
+                // This is the main reactive object that holds the entire state of our app
+                const currentWorkout = ref({
+                    date: new Date().toISOString().slice(0, 10),
+                    workoutType: null,
+                    exercises: []
                 });
-            });
-        }
 
-        // Event listener para el cambio de tipo de workout
-        workoutTypeSelect.addEventListener('change', (event) => {
-            const selectedWorkoutType = event.target.value;
-            exercisesContainer.innerHTML = ''; // Limpiar ejercicios anteriores
+                // This is a template for creating new workouts
+                const workoutTemplates = {
+                    "Push": ["Bench Press Machine", "Seated Dumbbell Shoulder Press", "Incline Dumbbell Press", "Cable Tricep Pushdowns", "Lateral Raises"],
+                    "Pull": ["Barbell RDLs", "Seated Cable Rows", "Lat Pulldowns", "Incline Dumbbell Curls", "Face Pulls", "Hammer Curls"],
+                    "Legs": ["Leg Press Machine", "Bulgarian Split Squats", "Leg Curls", "Leg Extensions", "Calf Raises"]
+                };
 
-            if (selectedWorkoutType && workouts[selectedWorkoutType]) {
-                workouts[selectedWorkoutType].forEach((exerciseName, index) => {
-                    const exerciseCard = document.createElement('div');
-                    exerciseCard.className = 'exercise-card rounded-lg';
-                    exerciseCard.innerHTML = `
-                        <h3 class="text-indigo-600">${exerciseName}</h3>
-                        <div id="sets-container-${index}">
-                            <!-- Los sets se añadirán aquí -->
-                        </div>
-                        <button type="button" class="add-set-btn rounded-lg" data-exercise-index="${index}">Añadir Set</button>
-                    `;
-                    exercisesContainer.appendChild(exerciseCard);
+                // --- METHODS ---
 
-                    // Añadir un set inicial por defecto para cada ejercicio
-                    addSet(index);
+                const createNewSet = () => ({ weight: null, unit: 'Kg', type: 'total', reps: null, rir: null });
 
-                    // Añadir evento para el botón "Añadir Set"
-                    exerciseCard.querySelector('.add-set-btn').addEventListener('click', (e) => {
-                        addSet(parseInt(e.target.dataset.exerciseIndex));
+                const selectWorkout = (type) => {
+                    // Ask for confirmation to prevent accidental data loss
+                    if (currentWorkout.value.exercises.length > 0 && !confirm('Are you sure you want to start a new workout? Current progress will be lost.')) {
+                        return;
+                    }
+                    
+                    currentWorkout.value.workoutType = type;
+                    currentWorkout.value.exercises = workoutTemplates[type].map(name => ({
+                        name: name,
+                        isOpen: true, // Make cards open by default
+                        sets: [createNewSet()] // Start with one empty set
+                    }));
+                };
+
+                const addSet = (exercise) => {
+                    exercise.sets.push(createNewSet());
+                };
+                
+                const exportToJson = () => {
+                    // Create a clean version of the data for export
+                    const exportData = {
+                        Date: currentWorkout.value.date,
+                        WorkoutType: currentWorkout.value.workoutType,
+                        Exercises: currentWorkout.value.exercises.map(ex => ({
+                            ExerciseName: ex.name,
+                            Sets: ex.sets.map(set => ({
+                                Weight: set.weight,
+                                Unit: set.unit,
+                                Type: set.type,
+                                Reps: set.reps,
+                                RIR: set.rir
+                            }))
+                        }))
+                    };
+
+                    const jsonString = JSON.stringify(exportData, null, 2);
+                    navigator.clipboard.writeText(jsonString).then(() => {
+                        alert('Workout JSON copied to clipboard!');
+                    }).catch(err => {
+                        console.error('Failed to copy text: ', err);
+                        alert('Failed to copy JSON. See console for details.');
                     });
-                });
-            }
-        });
+                };
 
-        // Event listener para generar el JSON
-        generateJsonBtn.addEventListener('click', () => {
-            const workoutDate = document.getElementById('workoutDate').value;
-            const workoutType = document.getElementById('workoutType').value;
+                // --- LIFECYCLE & PERSISTENCE ---
 
-            if (!workoutDate || !workoutType) {
-                showMessage('Por favor, selecciona la fecha y el tipo de workout.', 'error');
-                return;
-            }
+                // Watch for any changes in the workoutData object and save it
+                watch(currentWorkout, (newData) => {
+                    localStorage.setItem('strengthLoggerData', JSON.stringify(newData));
+                }, { deep: true });
 
-            const workoutData = {
-                Date: workoutDate,
-                WorkoutType: `Workout ${workoutType}`,
-                Exercises: []
-            };
-
-            const exerciseCards = exercisesContainer.querySelectorAll('.exercise-card');
-            exerciseCards.forEach(card => {
-                const exerciseName = card.querySelector('h3').textContent;
-                const sets = [];
-                const setGroups = card.querySelectorAll('.set-group');
-
-                setGroups.forEach(setGroup => {
-                    const weight = setGroup.querySelector('.set-weight').value;
-                    const unit = setGroup.querySelector('.set-unit').value;
-                    const type = setGroup.querySelector('.set-type').value;
-                    const reps = setGroup.querySelector('.set-reps').value;
-                    const rir = setGroup.querySelector('.set-rir').value;
-
-                    if (weight && reps && rir) {
-                        sets.push({
-                            Weight: parseFloat(weight),
-                            Unit: unit,
-                            Type: type,
-                            Reps: parseInt(reps),
-                            RIR: parseInt(rir)
-                        });
+                // When the app first loads, try to get data from localStorage
+                onMounted(() => {
+                    const savedData = localStorage.getItem('strengthLoggerData');
+                    if (savedData) {
+                        currentWorkout.value = JSON.parse(savedData);
                     }
                 });
 
-                if (sets.length > 0) {
-                    workoutData.Exercises.push({
-                        ExerciseName: exerciseName,
-                        Sets: sets
-                    });
-                }
-            });
-
-            jsonOutput.value = JSON.stringify(workoutData, null, 2);
-            showMessage('JSON generado exitosamente.');
-        });
-
-        // Event listener para copiar el JSON al portapapeles
-        copyJsonBtn.addEventListener('click', () => {
-            if (jsonOutput.value) {
-                // Usar document.execCommand para compatibilidad con iframes
-                jsonOutput.select();
-                document.execCommand('copy');
-                showMessage('JSON copiado al portapapeles.');
-            } else {
-                showMessage('No hay JSON para copiar.', 'error');
+                // Expose all our data and methods to the HTML template
+                return {
+                    currentWorkout,
+                    selectWorkout,
+                    addSet,
+                    exportToJson
+                };
             }
-        });
-
-        // Establecer la fecha actual por defecto
-        document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            document.getElementById('workoutDate').value = `${year}-${month}-${day}`;
-        });
+        }).mount('#app');
     </script>
 </body>
 </html>
