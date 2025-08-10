@@ -5,53 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Strength Logger</title>
     
-    <!-- 1. Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- 2. Vue.js for interactivity -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
-    <!-- Basic styling for dark mode and to prevent "flash of unstyled content" -->
     <style>
         body { background-color: #111827; color: #d1d5db; }
         [v-cloak] { display: none; }
+        .details-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 0.5rem 1rem; }
     </style>
 </head>
 <body class="p-4 md:p-6 lg:p-8">
 
-    <!-- This is the main container for our Vue app -->
-    <div id="app" v-cloak>
+    <div id="app" v-cloak class="max-w-2xl mx-auto">
 
         <h1 class="text-3xl font-bold text-white text-center mb-4">Strength Logger</h1>
 
         <!-- WORKOUT SELECTION -->
-        <div class="mb-6 bg-gray-800 p-4 rounded-lg">
-            <h2 class="font-bold text-lg mb-2 text-white">Select Workout</h2>
+        <div class="mb-6 bg-gray-800 p-4 rounded-lg shadow-lg">
+            <h2 class="font-bold text-lg mb-2 text-white">Start New Workout</h2>
             <div class="grid grid-cols-3 gap-2">
-                <button @click="selectWorkout('Push')" :class="{'bg-indigo-600 text-white': currentWorkout.workoutType === 'Push', 'bg-gray-700 hover:bg-gray-600': currentWorkout.workoutType !== 'Push'}" class="p-2 rounded-md font-semibold transition-colors">Push</button>
-                <button @click="selectWorkout('Pull')" :class="{'bg-indigo-600 text-white': currentWorkout.workoutType === 'Pull', 'bg-gray-700 hover:bg-gray-600': currentWorkout.workoutType !== 'Pull'}" class="p-2 rounded-md font-semibold transition-colors">Pull</button>
-                <button @click="selectWorkout('Legs')" :class="{'bg-indigo-600 text-white': currentWorkout.workoutType === 'Legs', 'bg-gray-700 hover:bg-gray-600': currentWorkout.workoutType !== 'Legs'}" class="p-2 rounded-md font-semibold transition-colors">Legs</button>
+                <button @click="startNewWorkout('Push')" class="bg-indigo-600 hover:bg-indigo-500 p-2 rounded-md font-semibold transition-colors text-white">Push</button>
+                <button @click="startNewWorkout('Pull')" class="bg-indigo-600 hover:bg-indigo-500 p-2 rounded-md font-semibold transition-colors text-white">Pull</button>
+                <button @click="startNewWorkout('Legs')" class="bg-indigo-600 hover:bg-indigo-500 p-2 rounded-md font-semibold transition-colors text-white">Legs</button>
             </div>
         </div>
 
-        <!-- WORKOUT DETAILS (only shows if a workout is selected) -->
-        <div v-if="currentWorkout.workoutType" class="space-y-4">
+        <!-- CURRENT WORKOUT LOGGER (only shows if a workout is in progress) -->
+        <div v-if="currentWorkout.workoutType" class="space-y-4 mb-8">
             <div class="flex justify-between items-center bg-gray-800 p-4 rounded-lg">
                 <input type="date" v-model="currentWorkout.date" class="bg-gray-700 p-2 rounded-md w-1/2">
-                <button @click="exportToJson" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-md">Export JSON</button>
+                <button @click="finishWorkout" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-md">Finish & Save</button>
             </div>
 
             <!-- EXERCISE CARDS -->
             <div v-for="exercise in currentWorkout.exercises" :key="exercise.name" class="bg-gray-800 rounded-lg shadow-md">
-                <!-- Collapsible Header -->
                 <div @click="exercise.isOpen = !exercise.isOpen" class="p-4 flex justify-between items-center cursor-pointer border-b border-gray-700">
                     <h3 class="text-xl font-bold text-white">{{ exercise.name }}</h3>
                     <span class="text-2xl transition-transform" :class="{'rotate-180': !exercise.isOpen}">&#9660;</span>
                 </div>
                 
-                <!-- Collapsible Content -->
                 <div v-show="exercise.isOpen" class="p-4">
-                    <!-- Set Headers -->
                     <div class="grid grid-cols-12 gap-2 text-xs text-gray-400 mb-2 font-bold">
                         <div class="col-span-3">Weight</div>
                         <div class="col-span-4">Unit/Type</div>
@@ -59,120 +52,162 @@
                         <div class="col-span-2">RIR</div>
                     </div>
                     
-                    <!-- Set Rows -->
                     <div v-for="(set, index) in exercise.sets" :key="index" class="grid grid-cols-12 gap-2 items-center mb-2">
-                        <input type="number" v-model.number="set.weight" class="col-span-3 bg-gray-700 p-2 rounded-md">
+                        <input type="number" v-model.number="set.weight" placeholder="--" class="col-span-3 bg-gray-700 p-2 rounded-md text-center">
                         <div class="col-span-4 flex gap-1">
-                            <select v-model="set.unit" class="bg-gray-700 p-2 rounded-md w-full text-xs">
-                                <option>Kg</option>
-                                <option>Lbs</option>
-                            </select>
-                            <select v-model="set.type" class="bg-gray-700 p-2 rounded-md w-full text-xs">
-                                <option>total</option>
-                                <option>per hand</option>
-                            </select>
+                            <select v-model="set.unit" class="bg-gray-700 p-2 rounded-md w-full text-xs"><option>Kg</option><option>Lbs</option></select>
+                            <select v-model="set.type" class="bg-gray-700 p-2 rounded-md w-full text-xs"><option>total</option><option>per hand</option></select>
                         </div>
-                        <input type="number" v-model.number="set.reps" class="col-span-2 bg-gray-700 p-2 rounded-md">
-                        <input type="number" v-model.number="set.rir" class="col-span-2 bg-gray-700 p-2 rounded-md">
+                        <input type="number" v-model.number="set.reps" placeholder="--" class="col-span-2 bg-gray-700 p-2 rounded-md text-center">
+                        <input type="number" v-model.number="set.rir" placeholder="--" class="col-span-2 bg-gray-700 p-2 rounded-md text-center">
                     </div>
 
-                    <!-- Add Set Button -->
                     <button @click="addSet(exercise)" class="mt-2 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-bold py-2 px-3 rounded-md w-full">Add Set</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- WORKOUT HISTORY -->
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+             <div class="flex justify-between items-center mb-2">
+                <h2 class="font-bold text-lg text-white">Workout History</h2>
+                <button v-if="workoutHistory.length > 0" @click="clearHistory" class="text-red-400 hover:text-red-300 text-xs font-semibold">Clear All</button>
+            </div>
+            <div v-if="workoutHistory.length === 0" class="text-center text-gray-400 py-4">No saved workouts yet.</div>
+            <div v-else class="space-y-2">
+                <div v-for="(workout, index) in workoutHistory" :key="workout.id" class="bg-gray-700 rounded-md">
+                     <div @click="workout.isOpen = !workout.isOpen" class="p-3 flex justify-between items-center cursor-pointer">
+                        <span class="font-bold">{{ workout.date }}</span>
+                        <span class="font-semibold text-indigo-300">{{ workout.workoutType }} Day</span>
+                        <button @click.stop="exportToJson(workout)" class="bg-green-700 hover:bg-green-600 text-xs text-white font-bold py-1 px-2 rounded">JSON</button>
+                    </div>
+                    <div v-if="workout.isOpen" class="p-3 border-t border-gray-600">
+                        <div v-for="exercise in workout.exercises" class="mb-2">
+                            <h4 class="font-bold text-white">{{exercise.ExerciseName}}</h4>
+                            <div v-for="(set, i) in exercise.Sets" class="text-sm text-gray-300 ml-2">
+                                <span class="font-mono">{{i+1}}.</span> {{set.Weight}} {{set.Unit}} ({{set.Type}}) - {{set.Reps}} reps @ RIR {{set.RIR}}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 3. All of our Vue.js Application Logic -->
     <script>
         const { createApp, ref, watch, onMounted } = Vue;
 
         createApp({
             setup() {
                 // --- DATA ---
+                const workoutHistory = ref([]);
+                const currentWorkout = ref({ workoutType: null, exercises: [] });
 
-                // This is the main reactive object that holds the entire state of our app
-                const currentWorkout = ref({
-                    date: new Date().toISOString().slice(0, 10),
-                    workoutType: null,
-                    exercises: []
-                });
-
-                // This is a template for creating new workouts
                 const workoutTemplates = {
                     "Push": ["Bench Press Machine", "Seated Dumbbell Shoulder Press", "Incline Dumbbell Press", "Cable Tricep Pushdowns", "Lateral Raises"],
-                    "Pull": ["Barbell RDLs", "Seated Cable Rows", "Lat Pulldowns", "Incline Dumbbell Curls", "Face Pulls", "Hammer Curls"],
+                    "Pull": ["Barbell RDLs", "Seated Cable Rows", "Lat Pulldowns", "Incline Dumbbell Curls", "Face Pulls"],
                     "Legs": ["Leg Press Machine", "Bulgarian Split Squats", "Leg Curls", "Leg Extensions", "Calf Raises"]
                 };
 
                 // --- METHODS ---
-
                 const createNewSet = () => ({ weight: null, unit: 'Kg', type: 'total', reps: null, rir: null });
 
-                const selectWorkout = (type) => {
-                    // Ask for confirmation to prevent accidental data loss
-                    if (currentWorkout.value.exercises.length > 0 && !confirm('Are you sure you want to start a new workout? Current progress will be lost.')) {
-                        return;
-                    }
+                const startNewWorkout = (type) => {
+                    if (currentWorkout.value.workoutType && !confirm('Start a new workout? Any unsaved progress will be lost.')) return;
                     
-                    currentWorkout.value.workoutType = type;
-                    currentWorkout.value.exercises = workoutTemplates[type].map(name => ({
-                        name: name,
-                        isOpen: true, // Make cards open by default
-                        sets: [createNewSet()] // Start with one empty set
-                    }));
-                };
-
-                const addSet = (exercise) => {
-                    exercise.sets.push(createNewSet());
-                };
-                
-                const exportToJson = () => {
-                    // Create a clean version of the data for export
-                    const exportData = {
-                        Date: currentWorkout.value.date,
-                        WorkoutType: currentWorkout.value.workoutType,
-                        Exercises: currentWorkout.value.exercises.map(ex => ({
-                            ExerciseName: ex.name,
-                            Sets: ex.sets.map(set => ({
-                                Weight: set.weight,
-                                Unit: set.unit,
-                                Type: set.type,
-                                Reps: set.reps,
-                                RIR: set.rir
-                            }))
+                    currentWorkout.value = {
+                        id: Date.now(), // Unique ID for this workout session
+                        date: new Date().toISOString().slice(0, 10),
+                        workoutType: type,
+                        isOpen: false, // For history view
+                        exercises: workoutTemplates[type].map(name => ({
+                            name: name,
+                            isOpen: true,
+                            sets: [createNewSet()]
                         }))
                     };
+                };
 
+                const addSet = (exercise) => exercise.sets.push(createNewSet());
+
+                const finishWorkout = () => {
+                    if (!confirm('Are you sure you want to finish and save this workout?')) return;
+                    
+                    // Create a clean, storable version of the workout
+                    const finishedWorkout = formatWorkoutForExport(currentWorkout.value);
+                    
+                    // Add it to the beginning of the history array
+                    workoutHistory.value.unshift(finishedWorkout);
+                    
+                    // Reset the current workout
+                    currentWorkout.value = { workoutType: null, exercises: [] };
+                };
+                
+                const clearHistory = () => {
+                    if (confirm('Are you sure you want to permanently delete all saved workouts?')) {
+                        workoutHistory.value = [];
+                    }
+                };
+
+                const formatWorkoutForExport = (workout) => ({
+                    id: workout.id,
+                    date: workout.date,
+                    isOpen: false,
+                    Date: workout.date, // For JSON compatibility with Gemini
+                    WorkoutType: workout.workoutType,
+                    Exercises: workout.exercises
+                        .filter(ex => ex.sets.some(s => s.reps > 0)) // Only include exercises with completed sets
+                        .map(ex => ({
+                        ExerciseName: ex.name,
+                        Sets: ex.sets
+                            .filter(s => s.reps > 0) // Only include completed sets
+                            .map(set => ({
+                            Weight: set.weight, Unit: set.unit, Type: set.type, Reps: set.reps, RIR: set.rir
+                        }))
+                    }))
+                });
+
+                const exportToJson = (workout) => {
+                    // We need to re-format the already cleaned workout for export
+                     const exportData = {
+                        Date: workout.Date,
+                        WorkoutType: workout.WorkoutType,
+                        Exercises: workout.Exercises
+                    };
                     const jsonString = JSON.stringify(exportData, null, 2);
                     navigator.clipboard.writeText(jsonString).then(() => {
-                        alert('Workout JSON copied to clipboard!');
-                    }).catch(err => {
-                        console.error('Failed to copy text: ', err);
-                        alert('Failed to copy JSON. See console for details.');
+                        alert(`Workout from ${workout.Date} copied to clipboard!`);
                     });
                 };
 
                 // --- LIFECYCLE & PERSISTENCE ---
-
-                // Watch for any changes in the workoutData object and save it
-                watch(currentWorkout, (newData) => {
-                    localStorage.setItem('strengthLoggerData', JSON.stringify(newData));
+                watch(workoutHistory, (newData) => {
+                    localStorage.setItem('strengthLogger_history', JSON.stringify(newData));
                 }, { deep: true });
 
-                // When the app first loads, try to get data from localStorage
-                onMounted(() => {
-                    const savedData = localStorage.getItem('strengthLoggerData');
-                    if (savedData) {
-                        currentWorkout.value = JSON.parse(savedData);
+                watch(currentWorkout, (newData) => {
+                    if(newData.workoutType) {
+                        localStorage.setItem('strengthLogger_current', JSON.stringify(newData));
+                    } else {
+                        localStorage.removeItem('strengthLogger_current');
                     }
+                }, { deep: true });
+
+                onMounted(() => {
+                    const savedHistory = localStorage.getItem('strengthLogger_history');
+                    if (savedHistory) workoutHistory.value = JSON.parse(savedHistory);
+
+                    const savedCurrent = localStorage.getItem('strengthLogger_current');
+                    if (savedCurrent) currentWorkout.value = JSON.parse(savedCurrent);
                 });
 
-                // Expose all our data and methods to the HTML template
                 return {
                     currentWorkout,
-                    selectWorkout,
+                    workoutHistory,
+                    startNewWorkout,
                     addSet,
+                    finishWorkout,
+                    clearHistory,
                     exportToJson
                 };
             }
